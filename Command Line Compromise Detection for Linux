@@ -1,0 +1,189 @@
+A) The Big Five
+    + Processes
+    + Directories
+    + Files
+    + Users
+    + Logs
+ 
+B) Suspicious Processes Unusual Ports
+    netstat -nalp
+    
+C)  Suspicious Processes Investigating a PID
+ 
+ ls -alR /proc/*/cwd 2> /dev/null | grep tmp
+ ls -alR /proc/*/exe 2> /dev/null | grep deleted
+
+D) Suspicious Directories
+• Used to hide malicious binaries.
+• Used to hide stolen data.
+• Used to holding staging data for further incursion.
+• Used to hold persistence mechanisms.
+
+E) Suspicious Directories Commonly Targeted
+
+/tmp, /var/tmp
+/dev
+/dev/shm
+/bin
+/sbin
+/usr/bin
+/usr/sbin
+/lib*, /usr/lib*
+/etc
+/var/log
+/var/spool
+public_html
+Privileged home directories
+Standard home directories
+
+F) Suspicious Directories Hidden Directories
+find / -type d -name ".*”
+
+G ) Suspicious Files Immutable Files
+
+root@ubuntu-18-dirty:/tmp# lsattr / -R 2> /dev/null | grep "\----i"
+----i---------e--- /tmp/.t
+----i---------e--- /bin/pss
+
+H ) Suspicious Files File Masquerading
+
+root@ubuntu-18-dirty:~/public_html# file * -p
+1.jpg: ELF 32-bit LSB executable, ARM, …statically linked, stripped
+2.jpg: ELF 32-bit LSB executable, ARM, …statically linked, stripped
+3.jpg: ELF 32-bit MSB executable, MIPS, …statically linked, stripped
+4.jpg:
+ELF 32-bit LSB executable, MIPS, …statically linked, stripped
+index.html: data
+logo.jpg: PHP script, ASCII text
+logo.png: PNG image data, 32 x 32, 8-bit/color RGBA, non-interlaced
+
+I ) Suspicious Files Hidden Binaries
+
+root@ubuntu-18-dirty:/tmp# find / -name ".*" -exec file -p '{}' \; | grep ELF
+/var/tmp/.ICE-unix/.db: ELF 64-bit … stripped
+
+J ) Suspicious Files Named Pipes
+
+root@ubuntu-18:/# find / -type p
+/run/dmeventd-client
+/run/dmeventd-server
+…
+/tmp/f ----> One Character and in a /tmp directory?
+
+
+K) Suspicious Files System Files Modified
+
+[root@centos-6-2 ~]# rpm -Va | grep ^..5.
+SM5....T. c /etc/ssh/sshd_config
+S.5....T. c /etc/ssh/ssh_config
+S.5....T. c /root/.bashrc
+
+root@ubuntu16-dirty:/bin# debsums -c
+/usr/sbin/nologin
+
+L) Suspicious Users History File Weirdness
+root@ubuntu-18:/# ls -alR | grep .*history
+lrwxrwxrwx 1 www www 9 Nov 13 00:23 .bash_history -> /dev/null (Anti Forensics)
+-rw------- 1 root root 53083 Nov 12 23:49 .bash_history
+
+M ) Suspicious Users SSH Keys
+root@ubuntu-18-dirty:/tmp# find / -name authorized_keys
+/root/.ssh/authorized_keys
+/bin/.ssh/authorized_keys
+/home/jscott/.ssh/authorized_keys
+/home/www/.ssh/authorized_keys
+
+N ) Suspicious Users Scheduler Persistence
+root@ubuntu-18:/tmp# crontab -l
+* * * * * /tmp/.d >/dev/null 2>&1
+
+O ) Suspicious Logs Audit Log Tampering 
+
+/var/log/wtmp - All valid past logins
+/var/log/lastlog - Last login for each user
+/var/log/btmp - All bad logins
+/var/run/utmp - All current logins
+/var/log/* - Various logs
+
+P ) Suspicious Logs Zero Byte Logs
+
+root@ubuntu16-dirty:~# ls -al /var/log
+total 104
+drwxrwxr-x 8 root syslog 4096 Oct 24 06:25 .
+drwxr-xr-x 17 root root 4096 Jul 25 23:18 ..
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 auth.log
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 auth.log.1
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 auth.log.2.gz
+-rw-rw---- 1 root utmp
+0 Oct 25 00:55 btmp
+-rw------- 1 root utmp
+0 Oct 25 00:55 btmp.1
+…
+-rw-r—— 1 syslog adm
+0 Oct 25 00:55 kern.log
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 kern.log.1
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 kern.log.2.gz
+-rw-r--r-- 1 root root 292292 Oct 24 21:09 lastlog
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 syslog
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 syslog.1
+-rw-r----- 1 syslog adm
+0 Oct 25 00:55 syslog.2.gz
+…
+Zero byte audit logs?
+Log rotate compressed a zero byte file?
+No bad logins?
+No kernel messages?
+Date/time all identical?
+       
+    
+R ) Suspicious Logs Null Erased Logins
+root@ubuntu16-dirty:~# utmpdump /var/run/utmp
+Utmp dump of /dev/stdin
+[2] [00000] [~~ ] [reboot ] [~ ] [4.4.0-93-generic ] [0.0.0.0 ] [Tue Sep 05 00:03:17 2017 UTC]
+[1] [00053] [~~ ] [runlevel] [~ ] [4.4.0-93-generic ] [0.0.0.0 ] [Tue Sep 05 00:03:22 2017 UTC]
+[6] [01391] [tyS0] [LOGIN ] [ttyS0 ] [ ] [0.0.0.0 ] [Tue Sep 05 00:03:23 2017 UTC]
+[6] [01388] [tty1] [LOGIN ] [tty1 ] [ ] [0.0.0.0 ] [Tue Sep 05 00:03:23 2017 UTC]
+[7] [01488] [ts/0] [root ] [pts/0 ] [120.136.1.1 ] [120.136.1.1 ] [Tue Sep 05 00:03:57 2017 UTC]
+[0] [00000] [ ] [ ] [ ] [ ] [0.0.0.0 ] [ ]
+
+S ) Suspicious Logs Null Erased Bad Logins
+oot@ubuntu16-dirty:~# utmpdump /var/log/btmp
+Utmp dump of /dev/stdin
+[6] [23367] [ ] [cbm
+] [ssh:notty] [13.78.176.165 ] [13.78.176.165 ] [Mon Sep 11 20:52:56 2017 UTC]
+[6] [23367] [ ] [cbm
+] [ssh:notty] [13.78.176.165 ] [13.78.176.165 ] [Mon Sep 11 20:52:58 2017 UTC]
+[6] [23515] [ ] [cbm] [ssh:notty
+] [13.78.176.165 ] [13.78.176.165 ] [Mon Sep 11 20:55:30 2017 UTC]
+[6] [23515] [ ] [cbm] [ssh:notty] [13.78.176.165 ] [13.78.176.165 ] [Mon Sep 11 20:55:33 2017 UTC]
+[0] [00000] [ ] [ ] [ ] [ ] [0.0.0.0 ] [ ]
+[0] [00000] [ ] [ ] [ ] [ ] [0.0.0.0 ] [ ]
+[0] [00000] [ ] [ ] [ ] [ ] [0.0.0.0 ] [ ]
+[0] [00000] [ ] [ ] [ ] [ ] [0.0.0.0 ] [ ]
+
+
+T ) Suspicious Logs Null Erased Bad Logins
+
+root@ubuntu16-dirty:~# lastb
+cbm
+ssh:notty
+13.78.176.165 Mon Sep 11 20:58 - 20:58 (00:00)
+cbm
+ssh:notty
+13.78.176.165 Mon Sep 11 20:58 - 20:58 (00:00)
+cbm
+ssh:notty
+13.78.176.165 Mon Sep 11 20:52 - 20:52 (00:00)
+cbm
+ssh:notty
+13.78.176.165 Mon Sep 11 20:52 - 20:52 (00:00)
+Thu Jan 1 00:00 - 00:00 (00:00)
+Thu Jan 1 00:00 - 00:00 (00:00)
+
